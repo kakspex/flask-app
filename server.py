@@ -3,6 +3,7 @@ from transformers import pipeline
 import threading
 import time
 import uuid
+import os
 
 app = Flask(__name__)
 
@@ -80,6 +81,5 @@ def get_result(task_id):
         return jsonify({"status": "completed", "game_code": task['result']}), 200
 
 if __name__ == '__main__':
- import os
-port = int(os.environ.get("PORT", 5000))  # Pobiera port z zmiennej środowiskowej, domyślnie 5000
-app.run(debug=True, host="0.0.0.0", port=port)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)

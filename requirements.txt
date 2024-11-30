@@ -2,3 +2,4 @@ flask
 transformers
 gunicorn
 torch==2.1.0
+numpy<2.0

@@ -42,10 +42,6 @@ def process_task(task_id, prompt):
         tasks[task_id]['status'] = "error"
         print(f"Błąd podczas przetwarzania zadania {task_id}: {e}")
 
-@app.route('/')
-def home():
-    return "Flask app is running!"
-
 @app.route('/generate-game', methods=['POST'])
 def generate_game():
     """
@@ -89,6 +85,5 @@ def get_result(task_id):
         return jsonify({"status": "completed", "game_code": task['result']}), 200
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))  # Pobiera port z Render
-    app.run(host='0.0.0.0', port=port)
-
+    port = int(os.environ.get('PORT', 5000))  # Pobiera port z Render lub używa 5000, jeśli nie jest ustawiony
+    app.run(host='0.0.0.0', port=port)  # Nasłuchuje na porcie podanym w zmiennej środowiskowej

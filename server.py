@@ -1,36 +1,35 @@
 from flask import Flask, request, jsonify
 from transformers import pipeline
 import threading
-import time
 import uuid
 import os
 
 app = Flask(__name__)
 
-# Ładujemy model do generowania tekstów
-generator = pipeline("text-generation", model="Qwen/Qwen2.5-Coder-7B-Instruct", pad_token_id=50256)
+# Ładowanie modelu na starcie serwera
+generator = pipeline("text-generation", model="EleutherAI/gpt-neo-125m", pad_token_id=50256)
 
 # Przechowywanie zadań w kolejce
 tasks = {}
 
 def process_task(task_id, prompt):
+    """
+    Przetwarza zadanie w tle, generując kod Lua na podstawie podanego promptu.
+    """
     try:
         print(f"Rozpoczynanie przetwarzania zadania {task_id} z promptem: {prompt}")
         
         response = generator(prompt, max_length=300, truncation=True)
         print(f"Generated response: {response}")
 
-        if response:
+        if response and 'generated_text' in response[0]:
             result = response[0]['generated_text']
-            print(f"Generated Lua Code: {result}")
             
-            # Zapewniamy, że kod zaczyna się od "local"
+            # Usuwanie nadmiarowych znaków i formatowanie wyniku
             code_start = result.find("local")
             clean_code = result[code_start:].strip() if code_start != -1 else result.strip()
-            
-            # Usuwanie końcowego znaku ''' (jeśli istnieje)
-            clean_code = clean_code.rstrip("`")  # Usunięcie nadmiarowych apostrofów na końcu
 
+            # Zapisanie wyniku
             tasks[task_id]['result'] = clean_code
             tasks[task_id]['status'] = "completed"
             print(f"Zadanie {task_id} zakończone. Kod Lua: {clean_code}")
@@ -45,6 +44,9 @@ def process_task(task_id, prompt):
 
 @app.route('/generate-game', methods=['POST'])
 def generate_game():
+    """
+    Tworzy nowe zadanie generowania kodu Lua na podstawie podanego promptu.
+    """
     try:
         data = request.get_json()
         prompt = data.get("prompt", "")
@@ -59,7 +61,7 @@ def generate_game():
         # Rozpocznij przetwarzanie w tle
         threading.Thread(target=process_task, args=(task_id, prompt)).start()
         
-        return jsonify({"task_id": task_id}), 202  # Zwrócenie task_id do Roblox Studio
+        return jsonify({"task_id": task_id}), 202  # Zwrócenie task_id do klienta
     
     except Exception as e:
         print(f"Błąd podczas tworzenia zadania: {e}")
@@ -67,8 +69,10 @@ def generate_game():
 
 @app.route('/get-result/<task_id>', methods=['GET'])
 def get_result(task_id):
+    """
+    Pobiera wynik dla podanego zadania.
+    """
     print(f"Żądanie statusu dla zadania: {task_id}")
-    print(f"Obecne zadania: {tasks}")
     task = tasks.get(task_id)
     if not task:
         print(f"Zadanie o ID {task_id} nie istnieje.")

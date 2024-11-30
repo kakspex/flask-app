@@ -42,6 +42,10 @@ def process_task(task_id, prompt):
         tasks[task_id]['status'] = "error"
         print(f"Błąd podczas przetwarzania zadania {task_id}: {e}")
 
+@app.route('/')
+def home():
+    return "Flask app is running!"
+
 @app.route('/generate-game', methods=['POST'])
 def generate_game():
     """

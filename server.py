@@ -87,3 +87,4 @@ def get_result(task_id):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))  # Pobiera port z Render lub używa 5000, jeśli nie jest ustawiony
     app.run(host='0.0.0.0', port=port)  # Nasłuchuje na porcie podanym w zmiennej środowiskowej
+

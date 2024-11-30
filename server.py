@@ -89,6 +89,6 @@ def get_result(task_id):
         return jsonify({"status": "completed", "game_code": task['result']}), 200
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))  # Pobiera port z Render
+    port = int(os.environ.get('PORT', 10000))  # Pobiera port z Render
     app.run(host='0.0.0.0', port=port)
 

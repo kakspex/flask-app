@@ -16,24 +16,20 @@ def process_task(task_id, prompt):
     try:
         print(f"Rozpoczynanie przetwarzania zadania {task_id} z promptem: {prompt}")
         
-        # Dynamiczne zarządzanie długością
-        max_length = 300 if "create" in prompt.lower() else 100
-        response = generator(prompt, max_length=max_length, truncation=True)
-        
+        response = generator(prompt, max_length=300, truncation=True)
+        print(f"Generated response: {response}")
+
         if response:
             result = response[0]['generated_text']
+            print(f"Generated Lua Code: {result}")
             
-            # Filtracja: Zostaw tylko czysty kod Lua
-            if "lua" in result:
-                code_start = result.find("lua") + len("lua")
-                code_end = result.find("\n", code_start)
-                clean_code = result[code_start:code_end].strip() if code_end > -1 else result[code_start:].strip()
-            else:
-                clean_code = result.strip()
+            # Zapewniamy, że kod zaczyna się od "local"
+            code_start = result.find("local")
+            clean_code = result[code_start:].strip() if code_start != -1 else result.strip()
             
-            # Usuń dodatkowe znaki końcowe, takie jak "'''"
-            clean_code = clean_code.rstrip(" `\"")
-            
+            # Usuwanie końcowego znaku ''' (jeśli istnieje)
+            clean_code = clean_code.rstrip("`")  # Usunięcie nadmiarowych apostrofów na końcu
+
             tasks[task_id]['result'] = clean_code
             tasks[task_id]['status'] = "completed"
             print(f"Zadanie {task_id} zakończone. Kod Lua: {clean_code}")
@@ -45,7 +41,6 @@ def process_task(task_id, prompt):
         tasks[task_id]['result'] = None
         tasks[task_id]['status'] = "error"
         print(f"Błąd podczas przetwarzania zadania {task_id}: {e}")
-
 
 @app.route('/generate-game', methods=['POST'])
 def generate_game():

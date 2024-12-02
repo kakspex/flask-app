@@ -13,23 +13,27 @@ generator = pipeline("text-generation", model="distilbert/distilgpt2", pad_token
 tasks = {}
 
 def process_task(task_id, prompt):
-    """
-    Przetwarza zadanie w tle, generując kod Lua na podstawie podanego promptu.
-    """
     try:
         print(f"Rozpoczynanie przetwarzania zadania {task_id} z promptem: {prompt}")
         
-        response = generator(prompt, max_length=300, truncation=True)
-        print(f"Generated response: {response}")
-
-        if response and 'generated_text' in response[0]:
+        # Dynamiczne zarządzanie długością
+        max_length = 300 if "create" in prompt.lower() else 100
+        response = generator(prompt, max_length=max_length, truncation=True)
+        
+        if response:
             result = response[0]['generated_text']
             
-            # Usuwanie nadmiarowych znaków i formatowanie wyniku
-            code_start = result.find("local")
-            clean_code = result[code_start:].strip() if code_start != -1 else result.strip()
-
-            # Zapisanie wyniku
+            # Filtracja: Zostaw tylko czysty kod Lua
+            if "lua" in result:
+                code_start = result.find("lua") + len("lua")
+                code_end = result.find("\n", code_start)
+                clean_code = result[code_start:code_end].strip() if code_end > -1 else result[code_start:].strip()
+            else:
+                clean_code = result.strip()
+            
+            # Usuń dodatkowe znaki końcowe, takie jak "'''"
+            clean_code = clean_code.rstrip(" `\"")
+            
             tasks[task_id]['result'] = clean_code
             tasks[task_id]['status'] = "completed"
             print(f"Zadanie {task_id} zakończone. Kod Lua: {clean_code}")
@@ -41,6 +45,7 @@ def process_task(task_id, prompt):
         tasks[task_id]['result'] = None
         tasks[task_id]['status'] = "error"
         print(f"Błąd podczas przetwarzania zadania {task_id}: {e}")
+
 
 @app.route('/generate-game', methods=['POST'])
 def generate_game():
@@ -85,6 +90,6 @@ def get_result(task_id):
         return jsonify({"status": "completed", "game_code": task['result']}), 200
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))  # Pobiera port z Render lub używa 5000, jeśli nie jest ustawiony
-    app.run(host='0.0.0.0', port=port)  # Nasłuchuje na porcie podanym w zmiennej środowiskowej
+    port = int(os.environ.get('PORT', 5000)) 
+    app.run(host='0.0.0.0', port=port) 
 

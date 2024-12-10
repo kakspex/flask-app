@@ -12,11 +12,22 @@ generator = pipeline("text-generation", model="distilbert/distilgpt2", pad_token
 # Przechowywanie zadań w kolejce
 tasks = {}
 
+def calculate_max_length(prompt_length):
+    """
+    Oblicza maksymalną długość generowanego tekstu na podstawie długości promptu.
+    """
+    base_length = 50  # Minimalna liczba tokenów
+    factor = 2        # Mnożnik
+    return min(base_length + prompt_length * factor, 1000)  # Ograniczenie maksymalne do 1000
+
 def process_task(task_id, prompt):
     try:
         print(f"Rozpoczynanie przetwarzania zadania {task_id} z promptem: {prompt}")
         
-        response = generator(prompt, max_length=300, truncation=True)
+        # Obliczanie dynamicznej wartości max_length
+        max_length = calculate_max_length(len(prompt))
+        
+        response = generator(prompt, max_length=max_length, truncation=True)
         print(f"Generated response: {response}")
 
         if response:
@@ -86,5 +97,4 @@ def get_result(task_id):
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
-    app.run(host='0.0.0.0', port=port) 
-
+    app.run(host='0.0.0.0', port=port)

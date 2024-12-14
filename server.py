@@ -7,7 +7,7 @@ import os
 app = Flask(__name__)
 
 # Ładowanie modelu na starcie serwera
-generator = pipeline("text-generation", model="distilbert/distilgpt2", pad_token_id=50256)
+generator = pipeline("text-generation", model="codeparrot/codeparrot-small", pad_token_id=50256)
 
 # Przechowywanie zadań w kolejce
 tasks = {}
